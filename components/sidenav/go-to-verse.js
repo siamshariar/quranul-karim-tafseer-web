@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 // import Link from "next/link";
 import Drawer from "@mui/material/Drawer";
 import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 // import Loader from '../core/loader'
 import CloseIcon from "../icons/Close";
@@ -23,9 +24,9 @@ export default function GoToVerse({ open, controller, chapters }) {
     let list = [];
     for (let i = 0; i < numberOfVerses; i++) {
       list.push(
-        <li key={i} value={i + 1}>
+        <MenuItem key={i} value={i + 1}>
           আয়াত {enToBn(i + 1)}
-        </li>
+        </MenuItem>
       );
     }
     return list;
@@ -93,6 +94,7 @@ export default function GoToVerse({ open, controller, chapters }) {
                   className={styles.inner}
                   value={chapterNumber}
                   onChange={handleChapterChange}
+                  variant="standard"
                   MenuProps={{
                     classes: {
                       paper: styles.custom_select,
@@ -101,9 +103,9 @@ export default function GoToVerse({ open, controller, chapters }) {
                 >
                   {chapters &&
                     chapters.map((chapter) => (
-                      <li key={chapter.chapterNo} value={chapter.chapterNo}>
+                      <MenuItem key={chapter.chapterNo} value={chapter.chapterNo}>
                         {enToBn(chapter.chapterNo)}. {chapter.name}
-                      </li>
+                      </MenuItem>
                     ))}
                 </Select>
               )}
@@ -115,6 +117,7 @@ export default function GoToVerse({ open, controller, chapters }) {
                   className={styles.inner}
                   value={verseNumber}
                   onChange={handleVerseChange}
+                  variant="standard"
                   MenuProps={{
                     classes: {
                       paper: styles.custom_select,
