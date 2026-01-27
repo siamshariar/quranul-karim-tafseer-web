@@ -22,7 +22,7 @@ export default function SettingsContent() {
     <div className={styles.wrapper}>
       <View />
       <hr className={styles.divider} />
-      <VerseMode />
+      {/*<VerseMode />*/}
       <hr className={styles.divider} />
       <FontSize />
       <hr className={styles.divider} />
