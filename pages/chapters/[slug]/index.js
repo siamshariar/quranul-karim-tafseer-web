@@ -104,24 +104,8 @@ export async function getStaticProps(context) {
   try {
     const slug = encodeURI(context.params.slug);
     const chapterNo = parseInt(slug);
-
-    if (isNaN(chapterNo) || chapterNo < 1 || chapterNo > 114) {
-      return {
-        notFound: true,
-      };
-    }
-
-    const [chapterDetails, chaptersInfo] = await Promise.all([
-      getChapterDetails(chapterNo),
-      getChaptersInfo()
-    ]);
-
-    if (!chapterDetails || !chaptersInfo || !chaptersInfo[chapterNo - 1]) {
-      console.error(`Missing data for chapter ${chapterNo}`);
-      return {
-        notFound: true,
-      };
-    }
+    const chapterDetails = await getChapterDetails(chapterNo);
+    const chaptersInfo = await getChaptersInfo();
 
     return {
       props: {
@@ -136,7 +120,7 @@ export async function getStaticProps(context) {
       revalidate: 86400, // revalidate every 24 hours
     };
   } catch (error) {
-    console.error(`Error in getStaticProps for chapter ${context.params.slug}:`, error);
+    console.error('Error fetching chapter data:', error);
     return {
       notFound: true,
     };
@@ -144,37 +128,17 @@ export async function getStaticProps(context) {
 }
 
 export async function getStaticPaths() {
-  try {
-    const chapters = await getChaptersInfo();
+  const chapters = await getChaptersInfo();
+  let paths = [];
 
-    if (!chapters || !Array.isArray(chapters)) {
-      console.error('Invalid chapters data received');
-      return {
-        paths: [],
-        fallback: false,
-      };
-    }
+  chapters.map((chapter) => {
+    let slug = encodeURI(chapter.slug);
+    let obj = { params: { slug: slug } };
+    paths.push(obj);
+  });
 
-    let paths = [];
-
-    chapters.forEach((chapter) => {
-      if (chapter && chapter.slug) {
-        let slug = encodeURI(chapter.slug);
-        let obj = { params: { slug: slug } };
-        paths.push(obj);
-      }
-    });
-
-    return {
-      paths: paths,
-      fallback: false,
-    };
-  } catch (error) {
-    console.error('Error in getStaticPaths:', error);
-    // Return empty paths to prevent build failure
-    return {
-      paths: [],
-      fallback: false,
-    };
-  }
+  return {
+    paths: paths,
+    fallback: 'blocking',
+  };
 }
