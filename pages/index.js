@@ -76,16 +76,27 @@ export default function Home({ chapters }) {
 }
 
 export async function getStaticProps(context) {
-  const chapters = await getChaptersInfo();
+  try {
+    const chapters = await getChaptersInfo();
 
-  if (!chapters) {
+    if (!chapters) {
+      console.error('No chapters data received');
+      return {
+        notFound: true,
+      };
+    }
+
+    // Pass data to the page via props
     return {
-      notFound: true,
+      props: { chapters },
+      revalidate: 86400, // revalidate every 24 hours
+    };
+  } catch (error) {
+    console.error('Error in getStaticProps for home page:', error);
+    // Return empty chapters array to prevent build failure
+    return {
+      props: { chapters: [] },
+      revalidate: 3600, // revalidate every hour on error
     };
   }
-
-  // Pass data to the page via props
-  return {
-    props: { chapters },
-  };
 }

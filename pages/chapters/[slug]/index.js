@@ -101,37 +101,80 @@ export default function Chapter({
 }
 
 export async function getStaticProps(context) {
-  const slug = encodeURI(context.params.slug);
-  const chapterNo = parseInt(slug);
-  const chapterDetails = await getChapterDetails(chapterNo);
-  const chaptersInfo = await getChaptersInfo();
+  try {
+    const slug = encodeURI(context.params.slug);
+    const chapterNo = parseInt(slug);
 
-  return {
-    props: {
-      chapterNo: chapterDetails.chapterNo,
-      chapterName: chaptersInfo[chapterNo - 1].name,
-      chapterSlug: chaptersInfo[chapterNo - 1].slug,
-      chapterMp3Url: chapterDetails.mp3Url,
-      verses: chapterDetails.verses,
-      chapters: chaptersInfo,
-      key: chapterDetails.chapterNo,
-    },
-    revalidate: 86400, // revalidate every 24 hours
-  };
+    if (isNaN(chapterNo) || chapterNo < 1 || chapterNo > 114) {
+      return {
+        notFound: true,
+      };
+    }
+
+    const [chapterDetails, chaptersInfo] = await Promise.all([
+      getChapterDetails(chapterNo),
+      getChaptersInfo()
+    ]);
+
+    if (!chapterDetails || !chaptersInfo || !chaptersInfo[chapterNo - 1]) {
+      console.error(`Missing data for chapter ${chapterNo}`);
+      return {
+        notFound: true,
+      };
+    }
+
+    return {
+      props: {
+        chapterNo: chapterDetails.chapterNo,
+        chapterName: chaptersInfo[chapterNo - 1].name,
+        chapterSlug: chaptersInfo[chapterNo - 1].slug,
+        chapterMp3Url: chapterDetails.mp3Url,
+        verses: chapterDetails.verses,
+        chapters: chaptersInfo,
+        key: chapterDetails.chapterNo,
+      },
+      revalidate: 86400, // revalidate every 24 hours
+    };
+  } catch (error) {
+    console.error(`Error in getStaticProps for chapter ${context.params.slug}:`, error);
+    return {
+      notFound: true,
+    };
+  }
 }
 
 export async function getStaticPaths() {
-  const chapters = await getChaptersInfo();
-  let paths = [];
+  try {
+    const chapters = await getChaptersInfo();
 
-  chapters.map((chapter) => {
-    let slug = encodeURI(chapter.slug);
-    let obj = { params: { slug: slug } };
-    paths.push(obj);
-  });
+    if (!chapters || !Array.isArray(chapters)) {
+      console.error('Invalid chapters data received');
+      return {
+        paths: [],
+        fallback: false,
+      };
+    }
 
-  return {
-    paths: paths,
-    fallback: false,
-  };
+    let paths = [];
+
+    chapters.forEach((chapter) => {
+      if (chapter && chapter.slug) {
+        let slug = encodeURI(chapter.slug);
+        let obj = { params: { slug: slug } };
+        paths.push(obj);
+      }
+    });
+
+    return {
+      paths: paths,
+      fallback: false,
+    };
+  } catch (error) {
+    console.error('Error in getStaticPaths:', error);
+    // Return empty paths to prevent build failure
+    return {
+      paths: [],
+      fallback: false,
+    };
+  }
 }
