@@ -73,13 +73,24 @@ export default function AllahName({ chapters, names }) {
 }
 
 export async function getStaticProps() {
-  const chaptersInfo = await getChaptersInfo();
-  const namesOfAllah = await getNamesOfAllah();
+  try {
+    const chaptersInfo = await getChaptersInfo();
+    const namesOfAllah = await getNamesOfAllah();
 
-  return {
-    props: {
-      names: namesOfAllah,
-      chapters: chaptersInfo,
-    },
-  };
+    return {
+      props: {
+        names: namesOfAllah,
+        chapters: chaptersInfo,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching data for names-of-allah:', error);
+    // Return empty data to allow build to continue
+    return {
+      props: {
+        names: [],
+        chapters: [],
+      },
+    };
+  }
 }

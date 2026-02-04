@@ -128,17 +128,26 @@ export async function getStaticProps(context) {
 }
 
 export async function getStaticPaths() {
-  const chapters = await getChaptersInfo();
-  let paths = [];
+  try {
+    const chapters = await getChaptersInfo();
+    let paths = [];
 
-  chapters.map((chapter) => {
-    let slug = encodeURI(chapter.slug);
-    let obj = { params: { slug: slug } };
-    paths.push(obj);
-  });
+    chapters.map((chapter) => {
+      let slug = encodeURI(chapter.slug);
+      let obj = { params: { slug: slug } };
+      paths.push(obj);
+    });
 
-  return {
-    paths: paths,
-    fallback: 'blocking',
-  };
+    return {
+      paths: paths,
+      fallback: 'blocking',
+    };
+  } catch (error) {
+    console.error('Error fetching chapters for static paths:', error);
+    // Return empty paths to allow build to continue
+    return {
+      paths: [],
+      fallback: 'blocking',
+    };
+  }
 }
